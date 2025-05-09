@@ -1,29 +1,36 @@
-import { Mock } from 'ts-mockery';
 import { screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import ServersExporter from '../../src/servers/services/ServersExporter';
-import { ManageServers as createManageServers } from '../../src/servers/ManageServers';
-import { ServersMap, ServerWithId } from '../../src/servers/data';
+import { fromPartial } from '@total-typescript/shoehorn';
+import { MemoryRouter } from 'react-router';
+import type { ServersMap, ServerWithId } from '../../src/servers/data';
+import { ManageServersFactory } from '../../src/servers/ManageServers';
+import type { ServersExporter } from '../../src/servers/services/ServersExporter';
+import { checkAccessibility } from '../__helpers__/accessibility';
 import { renderWithEvents } from '../__helpers__/setUpTest';
 
 describe('<ManageServers />', () => {
-  const exportServers = jest.fn();
-  const serversExporter = Mock.of<ServersExporter>({ exportServers });
-  const useTimeoutToggle = jest.fn().mockReturnValue([false, jest.fn()]);
-  const ManageServers = createManageServers(
-    serversExporter,
-    () => <span>ImportServersBtn</span>,
+  const exportServers = vi.fn();
+  const serversExporter = fromPartial<ServersExporter>({ exportServers });
+  const useTimeoutToggle = vi.fn().mockReturnValue([false, vi.fn()]);
+  const ManageServers = ManageServersFactory(fromPartial({
+    ServersExporter: serversExporter,
+    ImportServersBtn: () => <span>ImportServersBtn</span>,
     useTimeoutToggle,
-    ({ hasAutoConnect }) => <tr><td>ManageServersRow {hasAutoConnect ? '[YES]' : '[NO]'}</td></tr>,
-  );
-  const createServerMock = (value: string, autoConnect = false) => Mock.of<ServerWithId>(
+    ManageServersRow: ({ hasAutoConnect }: { hasAutoConnect: boolean }) => (
+      <tr><td>ManageServersRow {hasAutoConnect ? '[YES]' : '[NO]'}</td></tr>
+    ),
+  }));
+  const createServerMock = (value: string, autoConnect = false) => fromPartial<ServerWithId>(
     { id: value, name: value, url: value, autoConnect },
   );
   const setUp = (servers: ServersMap = {}) => renderWithEvents(
     <MemoryRouter><ManageServers servers={servers} /></MemoryRouter>,
   );
 
-  afterEach(jest.clearAllMocks);
+  it('passes a11y checks', () => checkAccessibility(setUp({
+    foo: createServerMock('foo'),
+    bar: createServerMock('bar'),
+    baz: createServerMock('baz'),
+  })));
 
   it('shows search field which allows searching servers, affecting te amount of rendered rows', async () => {
     const { user } = setUp({
@@ -60,11 +67,11 @@ describe('<ManageServers />', () => {
 
     expect(screen.getAllByRole('columnheader')).toHaveLength(expectedCols);
     if (server.autoConnect) {
-      expect(screen.getByText(/\[YES\]/)).toBeInTheDocument();
-      expect(screen.queryByText(/\[NO\]/)).not.toBeInTheDocument();
+      expect(screen.getByText(/\[YES]/)).toBeInTheDocument();
+      expect(screen.queryByText(/\[NO]/)).not.toBeInTheDocument();
     } else {
-      expect(screen.queryByText(/\[YES\]/)).not.toBeInTheDocument();
-      expect(screen.getByText(/\[NO\]/)).toBeInTheDocument();
+      expect(screen.queryByText(/\[YES]/)).not.toBeInTheDocument();
+      expect(screen.getByText(/\[NO]/)).toBeInTheDocument();
     }
   });
 
@@ -85,7 +92,7 @@ describe('<ManageServers />', () => {
   });
 
   it.each([[true], [false]])('shows an error message if an error occurs while importing servers', (hasError) => {
-    useTimeoutToggle.mockReturnValue([hasError, jest.fn()]);
+    useTimeoutToggle.mockReturnValue([hasError, vi.fn()]);
 
     setUp({ foo: createServerMock('foo') });
 

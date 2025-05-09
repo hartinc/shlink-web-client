@@ -1,39 +1,29 @@
-import { ServerData } from '../data';
-import { CsvToJson } from '../../utils/helpers/csvjson';
+import type { CsvToJson } from '../../utils/helpers/csvjson';
+import type { ServerData } from '../data';
+import { deserializeServer } from '../data';
 
-const validateServer = (server: any): server is ServerData =>
-  typeof server.url === 'string' && typeof server.apiKey === 'string' && typeof server.name === 'string';
-
-const validateServers = (servers: any): servers is ServerData[] =>
-  Array.isArray(servers) && servers.every(validateServer);
+const validateAndDeserializeServers = (servers: unknown): ServerData[] => {
+  if (!Array.isArray(servers)) {
+    throw new Error('Provided file does not have the right format.');
+  }
+  return servers.map(deserializeServer);
+};
 
 export class ServersImporter {
-  public constructor(private readonly csvToJson: CsvToJson, private readonly fileReaderFactory: () => FileReader) {}
+  readonly #csvToJson: CsvToJson;
 
-  public readonly importServersFromFile = async (file?: File | null): Promise<ServerData[]> => {
+  public constructor(csvToJson: CsvToJson) {
+    this.#csvToJson = csvToJson;
+  }
+
+  public async importServersFromFile(file: File | null | undefined): Promise<ServerData[]> {
     if (!file) {
       throw new Error('No file provided');
     }
 
-    const reader = this.fileReaderFactory();
+    const content = await file.text();
+    const servers = await this.#csvToJson(content);
 
-    return new Promise((resolve, reject) => {
-      reader.addEventListener('loadend', async (e: ProgressEvent<FileReader>) => {
-        try {
-          // TODO Read as stream, otherwise, if the file is too big, this will block the browser tab
-          const content = e.target?.result?.toString() ?? '';
-          const servers = await this.csvToJson(content);
-
-          if (!validateServers(servers)) {
-            throw new Error('Provided file does not have the right format.');
-          }
-
-          resolve(servers);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      reader.readAsText(file);
-    });
-  };
+    return validateAndDeserializeServers(servers);
+  }
 }

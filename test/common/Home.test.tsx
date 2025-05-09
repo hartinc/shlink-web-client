@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { Mock } from 'ts-mockery';
-import { MemoryRouter } from 'react-router-dom';
+import { fromPartial } from '@total-typescript/shoehorn';
+import { MemoryRouter } from 'react-router';
 import { Home } from '../../src/common/Home';
-import { ServersMap, ServerWithId } from '../../src/servers/data';
+import type { ServersMap, ServerWithId } from '../../src/servers/data';
+import { checkAccessibility } from '../__helpers__/accessibility';
 
 describe('<Home />', () => {
   const setUp = (servers: ServersMap = {}) => render(
@@ -10,6 +11,10 @@ describe('<Home />', () => {
       <Home servers={servers} />
     </MemoryRouter>,
   );
+
+  it('passes a11y checks', () => checkAccessibility(
+    setUp({ '1a': fromPartial<ServerWithId>({ name: 'foo', id: '1' }) }),
+  ));
 
   it('renders title', () => {
     setUp();
@@ -19,9 +24,9 @@ describe('<Home />', () => {
   it.each([
     [
       {
-        '1a': Mock.of<ServerWithId>({ name: 'foo', id: '1' }),
-        '2b': Mock.of<ServerWithId>({ name: 'bar', id: '2' }),
-        '3c': Mock.of<ServerWithId>({ name: 'baz', id: '3' }),
+        '1a': fromPartial<ServerWithId>({ name: 'foo', id: '1' }),
+        '2b': fromPartial<ServerWithId>({ name: 'bar', id: '2' }),
+        '3c': fromPartial<ServerWithId>({ name: 'baz', id: '3' }),
       },
       3,
     ],

@@ -1,66 +1,71 @@
-import { screen } from '@testing-library/react';
-import { Mock } from 'ts-mockery';
+import { act, screen } from '@testing-library/react';
+import { fromPartial } from '@total-typescript/shoehorn';
+import type { ServerData } from '../../../src/servers/data';
 import { DuplicatedServersModal } from '../../../src/servers/helpers/DuplicatedServersModal';
-import { ServerData } from '../../../src/servers/data';
+import { checkAccessibility } from '../../__helpers__/accessibility';
 import { renderWithEvents } from '../../__helpers__/setUpTest';
 
 describe('<DuplicatedServersModal />', () => {
-  const onDiscard = jest.fn();
-  const onSave = jest.fn();
-  const setUp = (duplicatedServers: ServerData[] = []) => renderWithEvents(
-    <DuplicatedServersModal isOpen duplicatedServers={duplicatedServers} onDiscard={onDiscard} onSave={onSave} />,
-  );
+  const onClose = vi.fn();
+  const onConfirm = vi.fn();
+  const setUp = (duplicatedServers: ServerData[] = []) => act(() => renderWithEvents(
+    <DuplicatedServersModal open duplicatedServers={duplicatedServers} onClose={onClose} onConfirm={onConfirm} />,
+  ));
+  const mockServer = (data: Partial<ServerData> = {}) => fromPartial<ServerData>(data);
 
-  beforeEach(jest.clearAllMocks);
+  it('passes a11y checks', () => checkAccessibility(setUp()));
 
   it.each([
     [[], 0],
-    [[Mock.all<ServerData>()], 2],
-    [[Mock.all<ServerData>(), Mock.all<ServerData>()], 2],
-    [[Mock.all<ServerData>(), Mock.all<ServerData>(), Mock.all<ServerData>()], 3],
-    [[Mock.all<ServerData>(), Mock.all<ServerData>(), Mock.all<ServerData>(), Mock.all<ServerData>()], 4],
-  ])('renders expected amount of items', (duplicatedServers, expectedItems) => {
-    setUp(duplicatedServers);
+    [[mockServer()], 2],
+    [[mockServer(), mockServer()], 2],
+    [[mockServer(), mockServer(), mockServer()], 3],
+    [[mockServer(), mockServer(), mockServer(), mockServer()], 4],
+  ])('renders expected amount of items', async (duplicatedServers, expectedItems) => {
+    await setUp(duplicatedServers);
     expect(screen.queryAllByRole('listitem')).toHaveLength(expectedItems);
   });
 
   it.each([
     [
-      [Mock.all<ServerData>()],
+      [mockServer()],
       {
         header: 'Duplicated server',
         firstParagraph: 'There is already a server with:',
-        lastParagraph: 'Do you want to save this server anyway?',
+        lastParagraph: 'Do you want to save this server?',
         discardBtn: 'Discard',
+        confirmButton: 'Save duplicate',
       },
     ],
     [
-      [Mock.all<ServerData>(), Mock.all<ServerData>()],
+      [mockServer(), mockServer()],
       {
         header: 'Duplicated servers',
         firstParagraph: 'The next servers already exist:',
-        lastParagraph: 'Do you want to ignore duplicated servers?',
-        discardBtn: 'Ignore duplicated',
+        lastParagraph: 'Do you want to save duplicated servers?',
+        discardBtn: 'Ignore duplicates',
+        confirmButton: 'Save duplicates',
       },
     ],
-  ])('renders expected texts based on amount of servers', (duplicatedServers, assertions) => {
-    setUp(duplicatedServers);
+  ])('renders expected texts based on amount of servers', async (duplicatedServers, assertions) => {
+    await setUp(duplicatedServers);
 
     expect(screen.getByRole('heading')).toHaveTextContent(assertions.header);
     expect(screen.getByText(assertions.firstParagraph)).toBeInTheDocument();
     expect(screen.getByText(assertions.lastParagraph)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: assertions.discardBtn })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: assertions.confirmButton })).toBeInTheDocument();
   });
 
   it.each([
     [[]],
-    [[Mock.of<ServerData>({ url: 'url', apiKey: 'apiKey' })]],
+    [[mockServer({ url: 'url', apiKey: 'apiKey' })]],
     [[
-      Mock.of<ServerData>({ url: 'url_1', apiKey: 'apiKey_1' }),
-      Mock.of<ServerData>({ url: 'url_2', apiKey: 'apiKey_2' }),
+      mockServer({ url: 'url_1', apiKey: 'apiKey_1' }),
+      mockServer({ url: 'url_2', apiKey: 'apiKey_2' }),
     ]],
-  ])('displays provided server data', (duplicatedServers) => {
-    setUp(duplicatedServers);
+  ])('displays provided server data', async (duplicatedServers) => {
+    await setUp(duplicatedServers);
 
     if (duplicatedServers.length === 0) {
       expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
@@ -78,19 +83,19 @@ describe('<DuplicatedServersModal />', () => {
     }
   });
 
-  it('invokes onDiscard when appropriate button is clicked', async () => {
-    const { user } = setUp();
+  it('invokes onClose when appropriate button is clicked', async () => {
+    const { user } = await setUp();
 
-    expect(onDiscard).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Discard' }));
-    expect(onDiscard).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
   });
 
-  it('invokes onSave when appropriate button is clicked', async () => {
-    const { user } = setUp();
+  it('invokes onConfirm when appropriate button is clicked', async () => {
+    const { user } = await setUp();
 
-    expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Save anyway' }));
-    expect(onSave).toHaveBeenCalled();
+    expect(onConfirm).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Save duplicate' }));
+    expect(onConfirm).toHaveBeenCalled();
   });
 });

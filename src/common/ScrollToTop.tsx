@@ -1,7 +1,8 @@
-import { FC, PropsWithChildren, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import type { FC, PropsWithChildren } from 'react';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 
-export const ScrollToTop: FC<PropsWithChildren<unknown>> = ({ children }) => {
+export const ScrollToTop: FC<PropsWithChildren> = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {

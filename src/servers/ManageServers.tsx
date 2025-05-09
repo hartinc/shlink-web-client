@@ -1,86 +1,97 @@
-import { FC, useEffect, useState } from 'react';
-import { Button, Row } from 'reactstrap';
 import { faFileDownload as exportIcon, faPlus as plusIcon } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link } from 'react-router-dom';
+import type { TimeoutToggle } from '@shlinkio/shlink-frontend-kit';
+import { Button, Result, SearchInput, SimpleCard, Table } from '@shlinkio/shlink-frontend-kit/tailwind';
+import type { FC } from 'react';
+import { useMemo, useState } from 'react';
 import { NoMenuLayout } from '../common/NoMenuLayout';
-import { SimpleCard } from '../utils/SimpleCard';
-import { SearchField } from '../utils/SearchField';
-import { Result } from '../utils/Result';
-import { TimeoutToggle } from '../utils/helpers/hooks';
-import { ImportServersBtnProps } from './helpers/ImportServersBtn';
-import { ServersMap } from './data';
-import { ManageServersRowProps } from './ManageServersRow';
-import ServersExporter from './services/ServersExporter';
+import type { FCWithDeps } from '../container/utils';
+import { componentFactory, useDependencies } from '../container/utils';
+import type { ServersMap } from './data';
+import type { ImportServersBtnProps } from './helpers/ImportServersBtn';
+import type { ManageServersRowProps } from './ManageServersRow';
+import type { ServersExporter } from './services/ServersExporter';
 
-interface ManageServersProps {
+type ManageServersProps = {
   servers: ServersMap;
-}
+};
+
+type ManageServersDeps = {
+  ServersExporter: ServersExporter;
+  ImportServersBtn: FC<ImportServersBtnProps>;
+  useTimeoutToggle: TimeoutToggle;
+  ManageServersRow: FC<ManageServersRowProps>;
+};
 
 const SHOW_IMPORT_MSG_TIME = 4000;
 
-export const ManageServers = (
-  serversExporter: ServersExporter,
-  ImportServersBtn: FC<ImportServersBtnProps>,
-  useTimeoutToggle: TimeoutToggle,
-  ManageServersRow: FC<ManageServersRowProps>,
-): FC<ManageServersProps> => ({ servers }) => {
-  const allServers = Object.values(servers);
-  const [serversList, setServersList] = useState(allServers);
-  const filterServers = (searchTerm: string) => setServersList(
-    allServers.filter(({ name, url }) => `${name} ${url}`.toLowerCase().match(searchTerm.toLowerCase())),
+const ManageServers: FCWithDeps<ManageServersProps, ManageServersDeps> = ({ servers }) => {
+  const {
+    ServersExporter: serversExporter,
+    ImportServersBtn,
+    useTimeoutToggle,
+    ManageServersRow,
+  } = useDependencies(ManageServers);
+  const [searchTerm, setSearchTerm] = useState('');
+  const allServers = useMemo(() => Object.values(servers), [servers]);
+  const filteredServers = useMemo(
+    () => allServers.filter(({ name, url }) => `${name} ${url}`.toLowerCase().match(searchTerm.toLowerCase())),
+    [allServers, searchTerm],
   );
-  const hasAutoConnect = serversList.some(({ autoConnect }) => !!autoConnect);
+  const hasAutoConnect = allServers.some(({ autoConnect }) => !!autoConnect);
+  // eslint-disable-next-line react-compiler/react-compiler
   const [errorImporting, setErrorImporting] = useTimeoutToggle(false, SHOW_IMPORT_MSG_TIME);
 
-  useEffect(() => {
-    setServersList(Object.values(servers));
-  }, [servers]);
-
   return (
-    <NoMenuLayout>
-      <SearchField className="mb-3" onChange={filterServers} />
+    <NoMenuLayout className="tw:flex tw:flex-col tw:gap-y-4">
+      <SearchInput onChange={setSearchTerm} />
 
-      <Row className="mb-3">
-        <div className="col-md-6 d-flex d-md-block mb-2 mb-md-0">
-          <ImportServersBtn className="flex-fill" onImportError={setErrorImporting}>Import servers</ImportServersBtn>
-          {allServers.length > 0 && (
-            <Button outline className="ms-2 flex-fill" onClick={async () => serversExporter.exportServers()}>
-              <FontAwesomeIcon icon={exportIcon} fixedWidth /> Export servers
+      <div className="tw:flex tw:flex-col tw:md:flex-row tw:gap-2">
+        <div className="tw:flex tw:gap-2">
+          <ImportServersBtn className="tw:flex-grow" onError={setErrorImporting}>Import servers</ImportServersBtn>
+          {filteredServers.length > 0 && (
+            <Button variant="secondary" className="tw:flex-grow" onClick={async () => serversExporter.exportServers()}>
+              <FontAwesomeIcon icon={exportIcon} /> Export servers
             </Button>
           )}
         </div>
-        <div className="col-md-6 text-md-end d-flex d-md-block">
-          <Button outline color="primary" className="flex-fill" tag={Link} to="/server/create">
-            <FontAwesomeIcon icon={plusIcon} fixedWidth /> Add a server
-          </Button>
-        </div>
-      </Row>
+        <Button className="tw:md:ml-auto" to="/server/create">
+          <FontAwesomeIcon icon={plusIcon} /> Add a server
+        </Button>
+      </div>
 
-      <SimpleCard>
-        <table className="table table-hover responsive-table mb-0">
-          <thead className="responsive-table__header">
-            <tr>
-              {hasAutoConnect && <th aria-label="Auto-connect" style={{ width: '50px' }} />}
-              <th>Name</th>
-              <th>Base URL</th>
-              <th aria-label="Options" />
-            </tr>
-          </thead>
-          <tbody>
-            {!serversList.length && <tr className="text-center"><td colSpan={4}>No servers found.</td></tr>}
-            {serversList.map((server) => (
-              <ManageServersRow key={server.id} server={server} hasAutoConnect={hasAutoConnect} />
-            ))}
-          </tbody>
-        </table>
+      <SimpleCard className="card">
+        <Table header={(
+          <Table.Row>
+            {hasAutoConnect && (
+              <Table.Cell className="tw:w-[35px]"><span className="tw:sr-only">Auto-connect</span></Table.Cell>
+            )}
+            <Table.Cell>Name</Table.Cell>
+            <Table.Cell>Base URL</Table.Cell>
+            <Table.Cell><span className="sr-only">Options</span></Table.Cell>
+          </Table.Row>
+        )}>
+          {!filteredServers.length && (
+            <Table.Row className="tw:text-center"><Table.Cell colSpan={4}>No servers found.</Table.Cell></Table.Row>
+          )}
+          {filteredServers.map((server) => (
+            <ManageServersRow key={server.id} server={server} hasAutoConnect={hasAutoConnect} />
+          ))}
+        </Table>
       </SimpleCard>
 
       {errorImporting && (
-        <div className="mt-3">
-          <Result type="error">The servers could not be imported. Make sure the format is correct.</Result>
+        <div>
+          <Result variant="error">The servers could not be imported. Make sure the format is correct.</Result>
         </div>
       )}
     </NoMenuLayout>
   );
 };
+
+export const ManageServersFactory = componentFactory(ManageServers, [
+  'ServersExporter',
+  'ImportServersBtn',
+  'useTimeoutToggle',
+  'ManageServersRow',
+]);

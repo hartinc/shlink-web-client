@@ -1,22 +1,16 @@
-import classNames from 'classnames';
-import { SelectedServer } from '../servers/data';
+import { clsx } from 'clsx';
+import type { SelectedServer } from '../servers/data';
+import { isReachableServer } from '../servers/data';
 import { ShlinkVersions } from './ShlinkVersions';
-import { Sidebar } from './reducers/sidebar';
-import './ShlinkVersionsContainer.scss';
 
-export interface ShlinkVersionsContainerProps {
+export type ShlinkVersionsContainerProps = {
   selectedServer: SelectedServer;
-  sidebar: Sidebar;
-}
-
-export const ShlinkVersionsContainer = ({ selectedServer, sidebar }: ShlinkVersionsContainerProps) => {
-  const classes = classNames('text-center', {
-    'shlink-versions-container--with-sidebar': sidebar.sidebarPresent,
-  });
-
-  return (
-    <div className={classes}>
-      <ShlinkVersions selectedServer={selectedServer} />
-    </div>
-  );
 };
+
+export const ShlinkVersionsContainer = ({ selectedServer }: ShlinkVersionsContainerProps) => (
+  <div
+    className={clsx('tw:text-center', { 'tw:md:ml-(--aside-menu-width)': isReachableServer(selectedServer) })}
+  >
+    <ShlinkVersions selectedServer={selectedServer} />
+  </div>
+);

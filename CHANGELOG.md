@@ -4,6 +4,363 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+### Added
+* *Nothing*
+
+### Changed
+* Update to `@shlinkio/shlink-frontend-kit` 0.9 and `@shlinkio/shlink-web-component` 0.14 to add initial support to the new light theme brand color.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [4.4.0] - 2025-04-20
+### Added
+* [#1510](https://github.com/shlinkio/shlink-web-client/issues/1510) Existing HTTP credentials (cookies, TLS certs, authentication headers) can now be forwarded to the API server if appropriate [CORS headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Credentials) are set
+* [shlink-web-component#637](https://github.com/shlinkio/shlink-web-component/pull/637) QR codes are now generated client-side, without hitting Shlink.
+* [shlink-web-component#641](https://github.com/shlinkio/shlink-web-component/issues/641) It is now possible to provide any logo to be used with QR codes.
+* [shlink-web-component#640](https://github.com/shlinkio/shlink-web-component/issues/640) Allow default QR code settings to be handled via app settings.
+
+### Changed
+* Update to `react-router` 7.0
+* Update to `@shlinkio/shlink-frontend-kit` 0.8.x
+* Update to `@shlinkio/shlink-web-component` 0.13.x
+* Update to `@shlinkio/shlink-js-sdk` 2.0.0
+* Add `eslint-plugin-react-compiler`
+* Run unit tests in a headless browser using vitest browser mode and playwright.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [4.3.0] - 2024-11-30
+### Added
+* [#1360](https://github.com/shlinkio/shlink-web-client/issues/1360) Added ability for server IDs to be generated based on the server name and URL, instead of generating a random UUID.
+
+    This can improve sharing a predefined set of servers cia servers.json, env vars, or simply export and import your servers in some other device, and then be able to share server URLs which continue working.
+
+    All existing servers will keep their generated IDs in existing devices for backwards compatibility, but newly created servers will use the new approach.
+
+* [shlink-web-component#491](https://github.com/shlinkio/shlink-web-component/issues/491) Add support for colors in QR code configurator.
+* [shlink-web-component#515](https://github.com/shlinkio/shlink-web-component/issues/515) Add support for geolocation redirect conditions, when using Shlink 4.3 or newer.
+* [shlink-web-component#514](https://github.com/shlinkio/shlink-web-component/issues/514) Allow filtering short URLs list by domain, when using Shlink 4.3 or newer.
+* [shlink-web-component#520](https://github.com/shlinkio/shlink-web-component/issues/520) Allow navigating from domains list to short URLs list filtered by one domain, when using Shlink 4.3 or newer.
+* [shlink-web-component#517](https://github.com/shlinkio/shlink-web-component/issues/517) Update list of known domains when a short URL is created with a new domain.
+* [shlink-web-component#292](https://github.com/shlinkio/shlink-web-component/issues/292) Add icon in short URLs list indicating if a short URL has redirect rules.
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#504](https://github.com/shlinkio/shlink-web-component/issues/504) Fix fallback interval not causing new visits to be loaded.
+
+
+## [4.2.2] - 2024-10-19
+### Added
+* *Nothing*
+
+### Changed
+* Update to `@shlinkio/shlink-frontend-kit` 0.6.0
+* Update to `@shlinkio/shlink-web-component` 0.10.1
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#475](https://github.com/shlinkio/shlink-web-component/issues/475) Fix incorrect amount of dots being displayed in line charts when the difference in days/weeks/months is rounded up.
+
+
+## [4.2.1] - 2024-10-09
+### Added
+* *Nothing*
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#1325](https://github.com/shlinkio/shlink-web-client/issues/1325) Get dependency on `uuid` package back, as `crypto.randomUUID()` can only be used in [secure contexts](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
+* [shlink-web-component#461](https://github.com/shlinkio/shlink-web-component/issues/461) Ensure `shortUrlsList.confirmDeletion` setting is `true` in any case, except when explicitly set to `false`.
+* [shlink-web-component#237](https://github.com/shlinkio/shlink-web-component/issues/237) Set darker color for previous period in charts, when light theme is enabled.
+* [shlink-web-component#246](https://github.com/shlinkio/shlink-web-component/issues/246) Fix selected date range not reflected in visits comparison date range selector, when selecting it in the line chart via drag'n'drop.
+
+
+## [4.2.0] - 2024-10-07
+### Added
+* [shlink-web-component#411](https://github.com/shlinkio/shlink-web-component/issues/411) Add support for `ip-address` redirect conditions when Shlink server is >=4.2
+* [shlink-web-component#196](https://github.com/shlinkio/shlink-web-component/issues/196) Allow active date range to be changed by selecting a range in visits and visits-comparison line charts.
+* [shlink-web-component#307](https://github.com/shlinkio/shlink-web-component/issues/307) Add new setting to disable short URL deletions confirmation.
+* [shlink-web-component#435](https://github.com/shlinkio/shlink-web-component/issues/435) Allow toggling between displaying raw user agent and parsed browser/OS in visits table.
+* [shlink-web-component#197](https://github.com/shlinkio/shlink-web-component/issues/197) Allow line charts to be expanded to the full size of the viewport, both in individual visits views, and when comparing visits.
+* [shlink-web-component#382](https://github.com/shlinkio/shlink-web-component/issues/382) Initialize QR code modal with all params unset, so that they fall back to the server defaults. Additionally, allow them to be unset if desired.
+
+### Changed
+* Use `ShlinkWebSettings` from `@shlinkio/shlink-web-component` to replace local settings UI.
+* Update to `@shlinkio/eslint-config-js-coding-standard` 3.0, and migrate to ESLint flat config.
+* Remove dependency on `uuid` package, and use `crypto.randomUUID()` instead.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [4.1.2] - 2024-04-17
+### Added
+* *Nothing*
+
+### Changed
+* Use new reusable workflow to publish docker image
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#244](https://github.com/shlinkio/shlink-web-component/issues/244) Display `visitedUrl` in visits table if the visit object has it, regardless of it being an orphan visit or not.
+* [shlink-web-component#327](https://github.com/shlinkio/shlink-web-component/issues/327) Ensure orphan visits type is sent to the server, to enable server-side filtering when consumed Shlink supports it.
+
+
+## [4.1.1] - 2024-04-11
+### Added
+* [shlink-web-component#293](https://github.com/shlinkio/shlink-web-component/issues/293) Allow ordering redirect rules via drag'n'drop.
+
+### Changed
+* Update JS coding standard
+* [#1132](https://github.com/shlinkio/shlink-web-client/issues/1132) Add warning message in "validate URLs" setting, indicating it is ignored when consuming Shlink >=4.0.0.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [shlink-web-component#294](https://github.com/shlinkio/shlink-web-component/issues/294) Make sure "validate URL" control is not displayed in short URL creation/edition, when consuming Shlink >=4.0.0.
+* [#1130](https://github.com/shlinkio/shlink-web-client/issues/1130) Fix importing servers in Firefox for Android when the CSV file contains spaces.
+* [#1133](https://github.com/shlinkio/shlink-web-client/issues/1133) Fix Shlink versions alignment in server error pages.
+
+
+## [4.1.0] - 2024-03-17
+### Added
+* [#1079](https://github.com/shlinkio/shlink-web-client/issues/1079) Add support Shlink 4.0.0.
+* [shlink-web-component#271](https://github.com/shlinkio/shlink-web-component/issues/271) Add support for redirect rules when consuming Shlink 4.0.0.
+
+  Now, if the server supports it, there will be a new item for every short URL dropdown, which will take you to a page where it will be possible to edit that short URL's redirect rules.
+
+### Changed
+* [shlink-web-component#249](https://github.com/shlinkio/shlink-web-component/issues/249) Replace `react-datepicker` with native `input[type="date"]` and `input[type="datetime-local"]` elements.
+* Update dependencies.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* [shlink-web-component#276](https://github.com/shlinkio/shlink-web-component/issues/276) Drop support for Shlink older than 3.3.0
+
+### Fixed
+* [#1084](https://github.com/shlinkio/shlink-web-client/issues/1084) Fix broken server dropdown menu when auto-connect is enabled.
+
+
+## [4.0.1] - 2024-02-01
+### Added
+* *Nothing*
+
+### Changed
+* [#821](https://github.com/shlinkio/shlink-web-client/issues/821) Update app gif from README.md
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#1046](https://github.com/shlinkio/shlink-web-client/issues/1046) Fix running docker image when server env vars are provided.
+
+
+## [4.0.0] - 2024-01-29
+### Added
+* [shlink-web-component #7](https://github.com/shlinkio/shlink-web-component/issues/7) Allow comparing visits for multiple short URLs, tags or domains.
+
+  When in the tags, domains or short URLs tables, you can now pick up to 5 items to compare their visits. Once selected, you are taken to a section displaying a comparative line chart, which supports all regular visits filtering capabilities.
+
+* [shlink-web-component #9](https://github.com/shlinkio/shlink-web-component/issues/9) Allow comparing visits with the previous period.
+* [shlink-web-component #12](https://github.com/shlinkio/shlink-web-component/issues/12) and [#13](https://github.com/shlinkio/shlink-web-component/issues/13) Add new "Visits options" section for arbitrary visit stats options. Add section to delete short URL and orphan visits there.
+
+  This section is only visible if short URL visits deletion or orphan visits deletion are supported by connected Shlink server.
+
+* [shlink-web-component #10](https://github.com/shlinkio/shlink-web-component/issues/10) Improve general accessibility: Add accessibility tests, fix accessibility issues and enable accessibility linting rules.
+
+### Changed
+* [#338](https://github.com/shlinkio/shlink-web-client/issues/338) Extract `@shlinkio/shlink-web-component` and `@shlinkio/shlink-frontend-kit` as external libs.
+* [#978](https://github.com/shlinkio/shlink-web-client/issues/978) Use system preferred theme as default theme.
+* Use API client from `@shlinkio/shlink-js-sdk` to consume Shlink servers.
+* [#902](https://github.com/shlinkio/shlink-web-client/pull/902) Docker image is no longer running as root. As a side effect, exposed port is `8080`, not `80` anymore.
+* [shlink-web-component #117](https://github.com/shlinkio/shlink-web-component/issues/117) Migrate charts from Chart.JS to Recharts.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* Drop support for Shlink older than v3.0.0
+
+### Fixed
+* [#910](https://github.com/shlinkio/shlink-web-client/issues/910) Fix warnings related with missing `act` in tests and refs in `AppUpdateBanner`.
+
+
+## [3.10.2] - 2023-07-09
+### Added
+* *Nothing*
+
+### Changed
+* [#781](https://github.com/shlinkio/shlink-web-client/issues/781) Migrate tests from jest to vitest.
+* [#843](https://github.com/shlinkio/shlink-web-client/issues/843) Build docker image only for new tags, making sure it always includes an actual version number.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* *Nothing*
+
+
+## [3.10.1] - 2023-04-23
+### Added
+* *Nothing*
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#826](https://github.com/shlinkio/shlink-web-client/issues/826) Fix generated short URLs CSV so that it can be used to import on Shlink.
+
+
+## [3.10.0] - 2023-03-19
+### Added
+* [#807](https://github.com/shlinkio/shlink-web-client/issues/807) Add support for device-specific long-URLs when creating or editing short URLs.
+* [#808](https://github.com/shlinkio/shlink-web-client/issues/808) Respect settings on excluding bots in the overview section, for visits cards.
+* [#809](https://github.com/shlinkio/shlink-web-client/issues/809) Respect settings on excluding bots in the tags list.
+
+### Changed
+* [#798](https://github.com/shlinkio/shlink-web-client/issues/798) Remove stryker and mutation testing.
+* [#800](https://github.com/shlinkio/shlink-web-client/issues/800) Use `/tags/stats` endpoint to load tags stats, when the server supports it.
+* Update to Vite 4.2
+* Update to TypeScript 5
+* Update to coding standard v2.1.0
+* Decouple tests from RTK internals.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#799](https://github.com/shlinkio/shlink-web-client/issues/799) Fix fallback visits not taking into account configuration regarding excluding bots.
+
+
+## [3.9.1] - 2022-12-31
+### Added
+* *Nothing*
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#787](https://github.com/shlinkio/shlink-web-client/issues/787) Fixed wrong base path set in vite config when homepage is set as empty string.
+
+
+## [3.9.0] - 2022-12-31
+### Added
+* [#750](https://github.com/shlinkio/shlink-web-client/issues/750) Added new icon indicators telling if a short URL can be normally visited, it received the max amount of visits, is still not enabled, etc.
+* [#764](https://github.com/shlinkio/shlink-web-client/issues/764) Added support to exclude visits from visits on short URLs list when consuming Shlink 3.4.0.
+
+  This feature also comes with a new setting to disable visits from bots by default, both on short URLs lists and visits sections.
+
+* [#760](https://github.com/shlinkio/shlink-web-client/issues/760) Added support to exclude short URLs which have reached the maximum amount of visits, or are valid until a date in the past.
+
+### Changed
+* [#753](https://github.com/shlinkio/shlink-web-client/issues/753) Migrated from react-scripts/webpack to vite.
+* [#770](https://github.com/shlinkio/shlink-web-client/issues/770) Updated to latest dependencies.
+* [#741](https://github.com/shlinkio/shlink-web-client/issues/741) Improved `visitsAsyncThunk`, making it wrap pending/fulfilled/rejected actions, as well as custom ones, in a type-safe way.
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* [#736](https://github.com/shlinkio/shlink-web-client/issues/736) Removed cards mode in tags. Only table mode is supported now.
+* [#774](https://github.com/shlinkio/shlink-web-client/issues/774) Dropped support for Shlink older than 2.8.0.
+
+### Fixed
+* [#715](https://github.com/shlinkio/shlink-web-client/issues/715) Fixed connection still failing on misconfigured servers, after editing their params to set proper values.
+
+
+## [3.8.2] - 2022-12-17
+### Added
+* *Nothing*
+
+### Changed
+* *Nothing*
+
+### Deprecated
+* *Nothing*
+
+### Removed
+* *Nothing*
+
+### Fixed
+* [#766](https://github.com/shlinkio/shlink-web-client/issues/766) Fixed visits query being lost when switching between sub-sections.
+* [#765](https://github.com/shlinkio/shlink-web-client/issues/765) Added missing `"Content-Type": "application/json"` to requests with payload, making older Shlink versions fail.
+
+
 ## [3.8.1] - 2022-12-06
 ### Added
 * *Nothing*

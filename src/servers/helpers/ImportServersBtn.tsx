@@ -1,94 +1,115 @@
-import { useRef, ChangeEvent, useState, useEffect, FC, PropsWithChildren } from 'react';
-import { Button, UncontrolledTooltip } from 'reactstrap';
-import { complement, pipe } from 'ramda';
 import { faFileUpload as importIcon } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useToggle } from '../../utils/helpers/hooks';
-import { mutableRefToElementRef } from '../../utils/helpers/components';
-import { ServersImporter } from '../services/ServersImporter';
-import { ServerData, ServersMap } from '../data';
+import { useElementRef, useToggle } from '@shlinkio/shlink-frontend-kit';
+import { Button } from '@shlinkio/shlink-frontend-kit/tailwind';
+import type { ChangeEvent, PropsWithChildren } from 'react';
+import { useCallback, useRef , useState } from 'react';
+import { UncontrolledTooltip } from 'reactstrap';
+import type { FCWithDeps } from '../../container/utils';
+import { componentFactory, useDependencies } from '../../container/utils';
+import type { ServerData, ServersMap, ServerWithId } from '../data';
+import type { ServersImporter } from '../services/ServersImporter';
 import { DuplicatedServersModal } from './DuplicatedServersModal';
-import './ImportServersBtn.scss';
+import { dedupServers, ensureUniqueIds } from './index';
 
 export type ImportServersBtnProps = PropsWithChildren<{
   onImport?: () => void;
-  onImportError?: (error: Error) => void;
+  onError?: (error: Error) => void;
   tooltipPlacement?: 'top' | 'bottom';
   className?: string;
 }>;
 
-interface ImportServersBtnConnectProps extends ImportServersBtnProps {
-  createServers: (servers: ServerData[]) => void;
+type ImportServersBtnConnectProps = ImportServersBtnProps & {
+  createServers: (servers: ServerWithId[]) => void;
   servers: ServersMap;
-}
+};
 
-const serversFiltering = (servers: ServerData[]) =>
-  ({ url, apiKey }: ServerData) => servers.some((server) => server.url === url && server.apiKey === apiKey);
+type ImportServersBtnDeps = {
+  ServersImporter: ServersImporter
+};
 
-export const ImportServersBtn = ({ importServersFromFile }: ServersImporter): FC<ImportServersBtnConnectProps> => ({
+const ImportServersBtn: FCWithDeps<ImportServersBtnConnectProps, ImportServersBtnDeps> = ({
   createServers,
   servers,
   children,
-  onImport = () => {},
-  onImportError = () => {},
+  onImport,
+  onError = () => {},
   tooltipPlacement = 'bottom',
   className = '',
 }) => {
-  const ref = useRef<HTMLInputElement>();
-  const [serversToCreate, setServersToCreate] = useState<ServerData[] | undefined>();
+  const { ServersImporter: serversImporter } = useDependencies(ImportServersBtn);
+  const ref = useElementRef<HTMLInputElement>();
   const [duplicatedServers, setDuplicatedServers] = useState<ServerData[]>([]);
   const [isModalOpen,, showModal, hideModal] = useToggle();
-  const create = pipe(createServers, onImport);
-  const createAllServers = pipe(() => create(serversToCreate ?? []), hideModal);
-  const createNonDuplicatedServers = pipe(
-    () => create((serversToCreate ?? []).filter(complement(serversFiltering(duplicatedServers)))),
-    hideModal,
+  const newServersCreatedRef = useRef(false);
+
+  const onFile = useCallback(
+    async ({ target }: ChangeEvent<HTMLInputElement>) =>
+      serversImporter.importServersFromFile(target.files?.[0])
+        .then((importedServers) => {
+          const { duplicatedServers, newServers } = dedupServers(servers, importedServers);
+
+          // Immediately create new servers
+          newServersCreatedRef.current = newServers.length > 0;
+          createServers(ensureUniqueIds(servers, newServers));
+
+          // For duplicated servers, ask for confirmation
+          if (duplicatedServers.length > 0) {
+            setDuplicatedServers(duplicatedServers);
+            showModal();
+          } else {
+            onImport?.();
+          }
+        })
+        .then(() => {
+          // Reset file input after processing file
+          (target as { value: string | null }).value = null;
+        })
+        .catch(onError),
+    [createServers, onError, onImport, servers, serversImporter, showModal],
   );
-  const onFile = async ({ target }: ChangeEvent<HTMLInputElement>) =>
-    importServersFromFile(target.files?.[0])
-      .then(setServersToCreate)
-      .then(() => {
-        // Reset input after processing file
-        (target as { value: string | null }).value = null; // eslint-disable-line no-param-reassign
-      })
-      .catch(onImportError);
 
-  useEffect(() => {
-    if (!serversToCreate) {
-      return;
+  const createDuplicatedServers = useCallback(() => {
+    createServers(ensureUniqueIds(servers, duplicatedServers));
+    hideModal();
+    onImport?.();
+  }, [createServers, duplicatedServers, hideModal, onImport, servers]);
+  const discardDuplicatedServers = useCallback(() => {
+    hideModal();
+    // If duplicated servers were discarded but some non-duplicated servers were created, call onImport
+    if (newServersCreatedRef.current) {
+      onImport?.();
     }
-
-    const existingServers = Object.values(servers);
-    const dupServers = serversToCreate.filter(serversFiltering(existingServers));
-    const hasDuplicatedServers = !!dupServers.length;
-
-    !hasDuplicatedServers ? create(serversToCreate) : setDuplicatedServers(dupServers);
-    hasDuplicatedServers && showModal();
-  }, [serversToCreate]);
+  }, [hideModal, onImport]);
 
   return (
     <>
-      <Button outline id="importBtn" className={className} onClick={() => ref.current?.click()}>
+      <Button variant="secondary" id="importBtn" className={className} onClick={() => ref.current?.click()}>
         <FontAwesomeIcon icon={importIcon} fixedWidth /> {children ?? 'Import from file'}
       </Button>
       <UncontrolledTooltip placement={tooltipPlacement} target="importBtn">
-        You can create servers by importing a CSV file with columns <b>name</b>, <b>apiKey</b> and <b>url</b>.
+        You can create servers by importing a CSV file with <b>name</b>, <b>apiKey</b> and <b>url</b> columns.
       </UncontrolledTooltip>
 
       <input
         type="file"
-        accept="text/csv"
-        className="import-servers-btn__csv-select"
-        ref={mutableRefToElementRef(ref)}
+        accept=".csv"
+        className="tw:hidden"
+        aria-hidden
+        tabIndex={-1}
+        ref={ref as any /* TODO Remove After updating to React 19 */}
         onChange={onFile}
+        data-testid="csv-file-input"
       />
 
       <DuplicatedServersModal
-        isOpen={isModalOpen}
+        open={isModalOpen}
         duplicatedServers={duplicatedServers}
-        onDiscard={createNonDuplicatedServers}
-        onSave={createAllServers}
+        onClose={discardDuplicatedServers}
+        onConfirm={createDuplicatedServers}
       />
     </>
   );
 };
+
+export const ImportServersBtnFactory = componentFactory(ImportServersBtn, ['ServersImporter']);

@@ -1,0 +1,43 @@
+name: 'Bug'
+description: Something on shlink is broken or not working as documented?
+labels: ['bug']
+body:
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: shlink-web-client version
+      placeholder: x.y.z
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: How do you use shlink-web-client
+      options:
+        - https://app.shlink.io
+        - Docker image
+        - Self-hosted
+        - Other (explain in summary)
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Current behavior
+      value: '<!-- How is it actually behaving (and it should not)? -->'
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Expected behavior
+      value: '<!-- How did you expect it to behave? -->'
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Minimum steps to reproduce
+      value: |
+        <!--
+        Emphasis in MINIMUM: What is the simplest way to reproduce the bug?
+        Avoid things like "Create a kubernetes cluster", or anything related with cloud providers, as that is rarely the root cause and the bug may be closed as "not reproducible".
+        If you can provide a simple docker compose config, that's even better.
+        -->

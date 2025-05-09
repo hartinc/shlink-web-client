@@ -1,9 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { NotFound } from '../../src/common/NotFound';
+import { checkAccessibility } from '../__helpers__/accessibility';
 
 describe('<NotFound />', () => {
   const setUp = (props = {}) => render(<MemoryRouter><NotFound {...props} /></MemoryRouter>);
+
+  it('passes a11y checks', () => checkAccessibility(setUp()));
 
   it('shows expected error title', () => {
     setUp();
@@ -27,6 +30,5 @@ describe('<NotFound />', () => {
 
     expect(link).toHaveAttribute('href', expectedLink);
     expect(link).toHaveTextContent(expectedText);
-    expect(link).toHaveAttribute('class', 'btn btn-outline-primary btn-lg');
   });
 });

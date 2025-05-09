@@ -1,53 +1,62 @@
-import { FC } from 'react';
-import { DropdownItem } from 'reactstrap';
-import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircle as toggleOnIcon } from '@fortawesome/free-regular-svg-icons';
 import {
   faBan as toggleOffIcon,
   faEdit as editIcon,
   faMinusCircle as deleteIcon,
   faPlug as connectIcon,
 } from '@fortawesome/free-solid-svg-icons';
-import { faCircle as toggleOnIcon } from '@fortawesome/free-regular-svg-icons';
-import { DropdownBtnMenu } from '../utils/DropdownBtnMenu';
-import { useToggle } from '../utils/helpers/hooks';
-import { DeleteServerModalProps } from './DeleteServerModal';
-import { ServerWithId } from './data';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { RowDropdownBtn, useToggle } from '@shlinkio/shlink-frontend-kit';
+import type { FC } from 'react';
+import { Link } from 'react-router';
+import { DropdownItem } from 'reactstrap';
+import type { FCWithDeps } from '../container/utils';
+import { componentFactory, useDependencies } from '../container/utils';
+import type { ServerWithId } from './data';
+import type { DeleteServerModalProps } from './DeleteServerModal';
 
-export interface ManageServersRowDropdownProps {
+export type ManageServersRowDropdownProps = {
   server: ServerWithId;
-}
+};
 
-interface ManageServersRowDropdownConnectProps extends ManageServersRowDropdownProps {
+type ManageServersRowDropdownConnectProps = ManageServersRowDropdownProps & {
   setAutoConnect: (server: ServerWithId, autoConnect: boolean) => void;
-}
+};
 
-export const ManageServersRowDropdown = (
-  DeleteServerModal: FC<DeleteServerModalProps>,
-): FC<ManageServersRowDropdownConnectProps> => ({ server, setAutoConnect }) => {
-  const [isMenuOpen, toggleMenu] = useToggle();
+type ManageServersRowDropdownDeps = {
+  DeleteServerModal: FC<DeleteServerModalProps>
+};
+
+const ManageServersRowDropdown: FCWithDeps<ManageServersRowDropdownConnectProps, ManageServersRowDropdownDeps> = (
+  { server, setAutoConnect },
+) => {
+  const { DeleteServerModal } = useDependencies(ManageServersRowDropdown);
   const [isModalOpen,, showModal, hideModal] = useToggle();
   const serverUrl = `/server/${server.id}`;
   const { autoConnect: isAutoConnect } = server;
   const autoConnectIcon = isAutoConnect ? toggleOffIcon : toggleOnIcon;
 
   return (
-    <DropdownBtnMenu isOpen={isMenuOpen} toggle={toggleMenu}>
-      <DropdownItem tag={Link} to={serverUrl}>
-        <FontAwesomeIcon icon={connectIcon} fixedWidth /> Connect
-      </DropdownItem>
-      <DropdownItem tag={Link} to={`${serverUrl}/edit`}>
-        <FontAwesomeIcon icon={editIcon} fixedWidth /> Edit server
-      </DropdownItem>
-      <DropdownItem onClick={() => setAutoConnect(server, !isAutoConnect)}>
-        <FontAwesomeIcon icon={autoConnectIcon} fixedWidth /> {isAutoConnect ? 'Do not a' : 'A'}uto-connect
-      </DropdownItem>
-      <DropdownItem divider />
-      <DropdownItem className="dropdown-item--danger" onClick={showModal}>
-        <FontAwesomeIcon icon={deleteIcon} fixedWidth /> Remove server
-      </DropdownItem>
+    <>
+      <RowDropdownBtn minWidth={isAutoConnect ? 210 : 170}>
+        <DropdownItem tag={Link} to={serverUrl}>
+          <FontAwesomeIcon icon={connectIcon} fixedWidth /> Connect
+        </DropdownItem>
+        <DropdownItem tag={Link} to={`${serverUrl}/edit`}>
+          <FontAwesomeIcon icon={editIcon} fixedWidth /> Edit server
+        </DropdownItem>
+        <DropdownItem onClick={() => setAutoConnect(server, !isAutoConnect)}>
+          <FontAwesomeIcon icon={autoConnectIcon} fixedWidth /> {isAutoConnect ? 'Do not a' : 'A'}uto-connect
+        </DropdownItem>
+        <DropdownItem divider tag="hr" />
+        <DropdownItem className="tw:text-danger" onClick={showModal}>
+          <FontAwesomeIcon icon={deleteIcon} fixedWidth /> Remove server
+        </DropdownItem>
+      </RowDropdownBtn>
 
-      <DeleteServerModal redirectHome={false} server={server} isOpen={isModalOpen} toggle={hideModal} />
-    </DropdownBtnMenu>
+      <DeleteServerModal server={server} open={isModalOpen} onClose={hideModal} />
+    </>
   );
 };
+
+export const ManageServersRowDropdownFactory = componentFactory(ManageServersRowDropdown, ['DeleteServerModal']);

@@ -1,17 +1,29 @@
-import { FC } from 'react';
-import { Button } from 'reactstrap';
+import { useParsedQuery } from '@shlinkio/shlink-frontend-kit';
+import { Button } from '@shlinkio/shlink-frontend-kit/tailwind';
+import type { FC } from 'react';
 import { NoMenuLayout } from '../common/NoMenuLayout';
+import type { FCWithDeps } from '../container/utils';
+import { componentFactory } from '../container/utils';
 import { useGoBack } from '../utils/helpers/hooks';
+import type { ServerData } from './data';
+import { isServerWithId } from './data';
 import { ServerForm } from './helpers/ServerForm';
+import type { WithSelectedServerProps } from './helpers/withSelectedServer';
 import { withSelectedServer } from './helpers/withSelectedServer';
-import { isServerWithId, ServerData } from './data';
 
-interface EditServerProps {
+type EditServerProps = WithSelectedServerProps & {
   editServer: (serverId: string, serverData: ServerData) => void;
-}
+};
 
-export const EditServer = (ServerError: FC) => withSelectedServer<EditServerProps>(({ editServer, selectedServer }) => {
+type EditServerDeps = {
+  ServerError: FC;
+};
+
+const EditServer: FCWithDeps<EditServerProps, EditServerDeps> = withSelectedServer((
+  { editServer, selectedServer, selectServer },
+) => {
   const goBack = useGoBack();
+  const { reconnect } = useParsedQuery<{ reconnect?: 'true' }>();
 
   if (!isServerWithId(selectedServer)) {
     return null;
@@ -19,19 +31,24 @@ export const EditServer = (ServerError: FC) => withSelectedServer<EditServerProp
 
   const handleSubmit = (serverData: ServerData) => {
     editServer(selectedServer.id, serverData);
+    if (reconnect === 'true') {
+      selectServer(selectedServer.id);
+    }
     goBack();
   };
 
   return (
     <NoMenuLayout>
       <ServerForm
-        title={<h5 className="mb-0">Edit &quot;{selectedServer.name}&quot;</h5>}
+        title={<>Edit &quot;{selectedServer.name}&quot;</>}
         initialValues={selectedServer}
         onSubmit={handleSubmit}
       >
-        <Button outline className="me-2" onClick={goBack}>Cancel</Button>
-        <Button outline color="primary">Save</Button>
+        <Button variant="secondary" onClick={goBack}>Cancel</Button>
+        <Button type="submit">Save</Button>
       </ServerForm>
     </NoMenuLayout>
   );
-}, ServerError);
+});
+
+export const EditServerFactory = componentFactory(EditServer, ['ServerError']);

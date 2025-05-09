@@ -1,47 +1,49 @@
-import { Mock } from 'ts-mockery';
-import ServersExporter from '../../../src/servers/services/ServersExporter';
-import { LocalStorage } from '../../../src/utils/services/LocalStorage';
+import { fromPartial } from '@total-typescript/shoehorn';
+import type { ServersMap } from '../../../src/servers/data';
+import { serializeServer } from '../../../src/servers/data';
+import { ServersExporter } from '../../../src/servers/services/ServersExporter';
+import type { LocalStorage } from '../../../src/utils/services/LocalStorage';
 import { appendChild, removeChild, windowMock } from '../../__mocks__/Window.mock';
 
 describe('ServersExporter', () => {
-  const storageMock = Mock.of<LocalStorage>({
-    get: jest.fn(() => ({
-      abc123: {
-        id: 'abc123',
-        name: 'foo',
-        autoConnect: true,
-      },
-      def456: {
-        id: 'def456',
-        name: 'bar',
-        autoConnect: false,
-      },
-    })),
+  const servers: ServersMap = {
+    abc123: {
+      id: 'abc123',
+      name: 'foo',
+      url: 'https://foo.com',
+      apiKey: 'foo_api_key',
+      autoConnect: true,
+    },
+    def456: {
+      id: 'def456',
+      name: 'bar',
+      url: 'https://bar.com',
+      apiKey: 'bar_api_key',
+      forwardCredentials: true,
+      autoConnect: false,
+    },
+  };
+  const storageMock = fromPartial<LocalStorage>({
+    get: vi.fn(() => servers as any),
   });
-  const erroneousToCsv = jest.fn(() => {
+  const erroneousToCsv = vi.fn(() => {
     throw new Error('');
   });
-  const createCsvjsonMock = (throwError = false) => (throwError ? erroneousToCsv : jest.fn(() => ''));
-
-  beforeEach(jest.clearAllMocks);
+  const createJsonToCsvMock = (throwError = false) => (throwError ? erroneousToCsv : vi.fn(() => ''));
 
   describe('exportServers', () => {
-    let originalConsole: Console;
-    const error = jest.fn();
+    const error = vi.fn();
 
     beforeEach(() => {
-      originalConsole = global.console;
-      global.console = Mock.of<Console>({ error });
-      (global as any).Blob = class Blob {};
-      (global as any).URL = { createObjectURL: () => '' };
+      vi.stubGlobal('console', fromPartial<Console>({ error }));
     });
     afterEach(() => {
-      global.console = originalConsole;
+      vi.unstubAllGlobals();
     });
 
     it('logs an error if something fails', () => {
-      const csvjsonMock = createCsvjsonMock(true);
-      const exporter = new ServersExporter(storageMock, windowMock, csvjsonMock);
+      const jsonToCsvMock = createJsonToCsvMock(true);
+      const exporter = new ServersExporter(storageMock, windowMock, jsonToCsvMock);
 
       exporter.exportServers();
 
@@ -50,7 +52,8 @@ describe('ServersExporter', () => {
     });
 
     it('makes use of download link API', () => {
-      const exporter = new ServersExporter(storageMock, windowMock, createCsvjsonMock());
+      const jsonToCsvMock = createJsonToCsvMock();
+      const exporter = new ServersExporter(storageMock, windowMock, jsonToCsvMock);
       const { document: { createElement } } = windowMock;
 
       exporter.exportServers();
@@ -59,6 +62,7 @@ describe('ServersExporter', () => {
       expect(createElement).toHaveBeenCalledTimes(1);
       expect(appendChild).toHaveBeenCalledTimes(1);
       expect(removeChild).toHaveBeenCalledTimes(1);
+      expect(jsonToCsvMock).toHaveBeenCalledWith(Object.values(servers).map(serializeServer));
     });
   });
 });

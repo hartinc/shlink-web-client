@@ -1,6 +1,8 @@
-import { render, screen } from '@testing-library/react';
-import { Mock } from 'ts-mockery';
-import { ErrorHandler as createErrorHandler } from '../../src/common/ErrorHandler';
+import { screen } from '@testing-library/react';
+import { fromPartial } from '@total-typescript/shoehorn';
+import type { PropsWithChildren, ReactNode } from 'react';
+import { ErrorHandler as BaseErrorHandler } from '../../src/common/ErrorHandler';
+import { checkAccessibility } from '../__helpers__/accessibility';
 import { renderWithEvents } from '../__helpers__/setUpTest';
 
 const ComponentWithError = () => {
@@ -8,20 +10,20 @@ const ComponentWithError = () => {
 };
 
 describe('<ErrorHandler />', () => {
-  const reload = jest.fn();
-  const window = Mock.of<Window>({
-    location: { reload },
-  });
-  const cons = Mock.of<Console>({ error: jest.fn() });
-  const ErrorHandler = createErrorHandler(window, cons);
+  const reload = vi.fn();
+  const location = fromPartial<Window['location']>({ reload });
+  const cons = fromPartial<Console>({ error: vi.fn() });
+  const ErrorHandler = (props: PropsWithChildren) => <BaseErrorHandler console={cons} location={location} {...props} />;
+  const setUp = (children: ReactNode = 'Error') => renderWithEvents(<ErrorHandler>{children}</ErrorHandler>);
 
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {}); // Silence react errors
+    vi.spyOn(console, 'error').mockImplementation(() => {}); // Silence react errors
   });
-  afterEach(jest.resetAllMocks);
+
+  it('passes a11y checks', () => checkAccessibility(setUp()));
 
   it('renders children when no error has occurred', () => {
-    render(<ErrorHandler children={<span>Foo</span>} />);
+    setUp(<span>Foo</span>);
 
     expect(screen.getByText('Foo')).toBeInTheDocument();
     expect(screen.queryByText('Oops! This is awkward :S')).not.toBeInTheDocument();
@@ -29,14 +31,14 @@ describe('<ErrorHandler />', () => {
   });
 
   it('renders error page when error has occurred', () => {
-    render(<ErrorHandler children={<ComponentWithError />} />);
+    setUp(<ComponentWithError />);
 
     expect(screen.getByText('Oops! This is awkward :S')).toBeInTheDocument();
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
   it('reloads page on button click', async () => {
-    const { user } = renderWithEvents(<ErrorHandler children={<ComponentWithError />} />);
+    const { user } = setUp(<ComponentWithError />);
 
     expect(reload).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button'));

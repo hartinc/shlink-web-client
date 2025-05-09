@@ -1,34 +1,20 @@
-import { FC, ReactNode } from 'react';
-import { Navigate, Routes, Route } from 'react-router-dom';
+import type { Settings as AppSettings } from '@shlinkio/shlink-web-component/settings';
+import { ShlinkWebSettings } from '@shlinkio/shlink-web-component/settings';
+import type { FC } from 'react';
 import { NoMenuLayout } from '../common/NoMenuLayout';
-import { NavPillItem, NavPills } from '../utils/NavPills';
+import { DEFAULT_SHORT_URLS_ORDERING } from './reducers/settings';
 
-const SettingsSections: FC<{ items: ReactNode[] }> = ({ items }) => (
-  <>
-    {items.map((child, index) => <div key={index} className="mb-3">{child}</div>)}
-  </>
-);
+export type SettingsProps = {
+  settings: AppSettings;
+  setSettings: (newSettings: AppSettings) => void;
+};
 
-export const Settings = (
-  RealTimeUpdates: FC,
-  ShortUrlCreation: FC,
-  ShortUrlsList: FC,
-  UserInterface: FC,
-  Visits: FC,
-  Tags: FC,
-) => () => (
+export const Settings: FC<SettingsProps> = ({ settings, setSettings }) => (
   <NoMenuLayout>
-    <NavPills className="mb-3">
-      <NavPillItem to="general">General</NavPillItem>
-      <NavPillItem to="short-urls">Short URLs</NavPillItem>
-      <NavPillItem to="other-items">Other items</NavPillItem>
-    </NavPills>
-
-    <Routes>
-      <Route path="general" element={<SettingsSections items={[<UserInterface />, <RealTimeUpdates />]} />} />
-      <Route path="short-urls" element={<SettingsSections items={[<ShortUrlCreation />, <ShortUrlsList />]} />} />
-      <Route path="other-items" element={<SettingsSections items={[<Tags />, <Visits />]} />} />
-      <Route path="*" element={<Navigate replace to="general" />} />
-    </Routes>
+    <ShlinkWebSettings
+      settings={settings}
+      updateSettings={setSettings}
+      defaultShortUrlsListOrdering={DEFAULT_SHORT_URLS_ORDERING}
+    />
   </NoMenuLayout>
 );

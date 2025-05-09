@@ -1,10 +1,15 @@
+import { Table } from '@shlinkio/shlink-frontend-kit/tailwind';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { ManageServersRow as createManageServersRow } from '../../src/servers/ManageServersRow';
-import { ServerWithId } from '../../src/servers/data';
+import { fromPartial } from '@total-typescript/shoehorn';
+import { MemoryRouter } from 'react-router';
+import type { ServerWithId } from '../../src/servers/data';
+import { ManageServersRowFactory } from '../../src/servers/ManageServersRow';
+import { checkAccessibility } from '../__helpers__/accessibility';
 
 describe('<ManageServersRow />', () => {
-  const ManageServersRow = createManageServersRow(() => <span>ManageServersRowDropdown</span>);
+  const ManageServersRow = ManageServersRowFactory(fromPartial({
+    ManageServersRowDropdown: () => <span>ManageServersRowDropdown</span>,
+  }));
   const server: ServerWithId = {
     name: 'My server',
     url: 'https://example.com',
@@ -13,24 +18,20 @@ describe('<ManageServersRow />', () => {
   };
   const setUp = (hasAutoConnect = false, autoConnect = false) => render(
     <MemoryRouter>
-      <table>
-        <tbody>
-          <ManageServersRow server={{ ...server, autoConnect }} hasAutoConnect={hasAutoConnect} />
-        </tbody>
-      </table>
+      <Table header={<Table.Row />}>
+        <ManageServersRow server={{ ...server, autoConnect }} hasAutoConnect={hasAutoConnect} />
+      </Table>
     </MemoryRouter>,
   );
+
+  it('passes a11y checks', () => checkAccessibility(setUp()));
 
   it.each([
     [true, 4],
     [false, 3],
   ])('renders expected amount of columns', (hasAutoConnect, expectedCols) => {
     setUp(hasAutoConnect);
-
-    const td = screen.getAllByRole('cell');
-    const th = screen.getAllByRole('columnheader');
-
-    expect(td.length + th.length).toEqual(expectedCols);
+    expect(screen.getAllByRole('cell')).toHaveLength(expectedCols);
   });
 
   it('renders a dropdown', () => {

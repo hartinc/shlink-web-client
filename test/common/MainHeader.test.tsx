@@ -1,11 +1,16 @@
 import { screen, waitFor } from '@testing-library/react';
-import { Router } from 'react-router-dom';
+import { fromPartial } from '@total-typescript/shoehorn';
 import { createMemoryHistory } from 'history';
-import { MainHeader as createMainHeader } from '../../src/common/MainHeader';
+import { Router } from 'react-router';
+import { MainHeaderFactory } from '../../src/common/MainHeader';
+import { checkAccessibility } from '../__helpers__/accessibility';
 import { renderWithEvents } from '../__helpers__/setUpTest';
 
 describe('<MainHeader />', () => {
-  const MainHeader = createMainHeader(() => <>ServersDropdown</>);
+  const MainHeader = MainHeaderFactory(fromPartial({
+    // Fake this component as a li, as it gets rendered inside a ul
+    ServersDropdown: () => <li>ServersDropdown</li>,
+  }));
   const setUp = (pathname = '') => {
     const history = createMemoryHistory();
     history.push(pathname);
@@ -16,6 +21,8 @@ describe('<MainHeader />', () => {
       </Router>,
     );
   };
+
+  it('passes a11y checks', () => checkAccessibility(setUp()));
 
   it('renders ServersDropdown', () => {
     setUp();
@@ -44,14 +51,12 @@ describe('<MainHeader />', () => {
     const toggle = screen.getByLabelText('Toggle navigation');
     const icon = toggle.firstChild;
 
-    expect(icon).toHaveAttribute('class', expect.stringMatching(/main-header__toggle-icon$/));
+    expect(icon).not.toHaveClass('tw:rotate-180');
     await user.click(toggle);
-    expect(icon).toHaveAttribute(
-      'class',
-      expect.stringMatching(/main-header__toggle-icon main-header__toggle-icon--opened$/),
-    );
+
+    expect(icon).toHaveClass('tw:rotate-180');
     await user.click(toggle);
-    expect(icon).toHaveAttribute('class', expect.stringMatching(/main-header__toggle-icon$/));
+    expect(icon).not.toHaveClass('tw:rotate-180');
   });
 
   it('opens Collapse when clicking toggle', async () => {

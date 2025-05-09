@@ -1,20 +1,16 @@
-import Bottle from 'bottlejs';
-import { useTimeoutToggle } from '../helpers/hooks';
-import { LocalStorage } from './LocalStorage';
-import { ColorGenerator } from './ColorGenerator';
+import { useTimeoutToggle } from '@shlinkio/shlink-frontend-kit';
+import type Bottle from 'bottlejs';
 import { csvToJson, jsonToCsv } from '../helpers/csvjson';
+import { LocalStorage } from './LocalStorage';
+import { TagColorsStorage } from './TagColorsStorage';
 
-const provideServices = (bottle: Bottle) => {
-  bottle.constant('localStorage', (global as any).localStorage);
+export const provideServices = (bottle: Bottle) => {
+  bottle.constant('localStorage', window.localStorage);
   bottle.service('Storage', LocalStorage, 'localStorage');
-  bottle.service('ColorGenerator', ColorGenerator, 'Storage');
+  bottle.service('TagColorsStorage', TagColorsStorage, 'Storage');
 
   bottle.constant('csvToJson', csvToJson);
   bottle.constant('jsonToCsv', jsonToCsv);
 
-  bottle.constant('setTimeout', global.setTimeout);
-  bottle.constant('clearTimeout', global.clearTimeout);
-  bottle.serviceFactory('useTimeoutToggle', useTimeoutToggle, 'setTimeout', 'clearTimeout');
+  bottle.serviceFactory('useTimeoutToggle', () => useTimeoutToggle);
 };
-
-export default provideServices;

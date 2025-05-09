@@ -2,15 +2,14 @@ name: Build and publish docker image
 
 on:
   push:
-    branches:
-      - develop
     tags:
       - 'v*'
 
 jobs:
   build:
-    uses: shlinkio/github-actions/.github/workflows/docker-build-and-publish.yml@main
+    uses: shlinkio/github-actions/.github/workflows/docker-publish-image.yml@main
     secrets: inherit
     with:
       image-name: shlinkio/shlink-web-client
       version-arg-name: VERSION
+      platforms: 'linux/arm64/v8,linux/amd64'

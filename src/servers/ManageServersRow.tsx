@@ -1,38 +1,53 @@
-import { FC } from 'react';
-import { UncontrolledTooltip } from 'reactstrap';
-import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck as checkIcon } from '@fortawesome/free-solid-svg-icons';
-import { ServerWithId } from './data';
-import { ManageServersRowDropdownProps } from './ManageServersRowDropdown';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Table } from '@shlinkio/shlink-frontend-kit/tailwind';
+import type { FC } from 'react';
+import { Link } from 'react-router';
+import { UncontrolledTooltip } from 'reactstrap';
+import type { FCWithDeps } from '../container/utils';
+import { componentFactory, useDependencies } from '../container/utils';
+import type { ServerWithId } from './data';
+import type { ManageServersRowDropdownProps } from './ManageServersRowDropdown';
 
-export interface ManageServersRowProps {
+export type ManageServersRowProps = {
   server: ServerWithId;
   hasAutoConnect: boolean;
-}
+};
 
-export const ManageServersRow = (
-  ManageServersRowDropdown: FC<ManageServersRowDropdownProps>,
-): FC<ManageServersRowProps> => ({ server, hasAutoConnect }) => (
-  <tr className="responsive-table__row">
-    {hasAutoConnect && (
-      <td className="responsive-table__cell" data-th="Auto-connect">
-        {server.autoConnect && (
-          <>
-            <FontAwesomeIcon icon={checkIcon} className="text-primary" id="autoConnectIcon" />
-            <UncontrolledTooltip target="autoConnectIcon" placement="right">
-              Auto-connect to this server
-            </UncontrolledTooltip>
-          </>
-        )}
-      </td>
-    )}
-    <th className="responsive-table__cell" data-th="Name">
-      <Link to={`/server/${server.id}`}>{server.name}</Link>
-    </th>
-    <td className="responsive-table__cell" data-th="Base URL">{server.url}</td>
-    <td className="responsive-table__cell text-end">
-      <ManageServersRowDropdown server={server} />
-    </td>
-  </tr>
-);
+type ManageServersRowDeps = {
+  ManageServersRowDropdown: FC<ManageServersRowDropdownProps>;
+};
+
+const ManageServersRow: FCWithDeps<ManageServersRowProps, ManageServersRowDeps> = ({ server, hasAutoConnect }) => {
+  const { ManageServersRowDropdown } = useDependencies(ManageServersRow);
+
+  return (
+    <Table.Row className="tw:relative">
+      {hasAutoConnect && (
+        <Table.Cell columnName="Auto-connect">
+          {server.autoConnect && (
+            <>
+              <FontAwesomeIcon
+                icon={checkIcon}
+                className="tw:text-lm-brand tw:dark:text-dm-brand"
+                id="autoConnectIcon"
+              />
+              <UncontrolledTooltip target="autoConnectIcon" placement="right">
+                Auto-connect to this server
+              </UncontrolledTooltip>
+            </>
+          )}
+        </Table.Cell>
+      )}
+      <Table.Cell className="tw:font-bold" columnName="Name">
+        <Link to={`/server/${server.id}`}>{server.name}</Link>
+      </Table.Cell>
+      <Table.Cell columnName="Base URL" className="tw:max-lg:border-b-0">{server.url}</Table.Cell>
+      <Table.Cell className="tw:text-right tw:max-lg:absolute tw:right-0 tw:-top-1 tw:mx-lg:pt-0">
+        <ManageServersRowDropdown server={server} />
+      </Table.Cell>
+    </Table.Row>
+  );
+};
+
+export const ManageServersRowFactory = componentFactory(ManageServersRow, ['ManageServersRowDropdown']);

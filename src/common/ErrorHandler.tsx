@@ -1,16 +1,19 @@
-import { Component, ReactNode } from 'react';
-import { Button } from 'reactstrap';
-import { SimpleCard } from '../utils/SimpleCard';
+import { Button } from '@shlinkio/shlink-frontend-kit/tailwind';
+import type { PropsWithChildren, ReactNode } from 'react';
+import { Component } from 'react';
+import { ErrorLayout } from './ErrorLayout';
 
-interface ErrorHandlerState {
+type ErrorHandlerProps = PropsWithChildren<{
+  location?: typeof window.location;
+  console?: typeof window.console;
+}>;
+
+type ErrorHandlerState = {
   hasError: boolean;
-}
+};
 
-export const ErrorHandler = (
-  { location }: Window,
-  { error }: Console,
-) => class extends Component<any, ErrorHandlerState> {
-  public constructor(props: object) {
+export class ErrorHandler extends Component<ErrorHandlerProps, ErrorHandlerState> {
+  public constructor(props: ErrorHandlerProps) {
     super(props);
     this.state = { hasError: false };
   }
@@ -20,27 +23,25 @@ export const ErrorHandler = (
   }
 
   public componentDidCatch(e: Error): void {
-    if (process.env.NODE_ENV !== 'development') {
-      error(e);
-    }
+    const { console = globalThis.console } = this.props;
+    console.error(e);
   }
 
   public render(): ReactNode {
     const { hasError } = this.state;
+    const { location = globalThis.location } = this.props;
+
     if (hasError) {
       return (
-        <div className="home">
-          <SimpleCard className="p-4">
-            <h1>Oops! This is awkward :S</h1>
-            <p>It seems that something went wrong. Try refreshing the page or just click this button.</p>
-            <br />
-            <Button outline color="primary" onClick={() => location.reload()}>Take me back</Button>
-          </SimpleCard>
-        </div>
+        <ErrorLayout title="Oops! This is awkward :S">
+          <p>It seems that something went wrong. Try refreshing the page or just click this button.</p>
+          <br />
+          <Button size="lg" onClick={() => location.reload()}>Take me back</Button>
+        </ErrorLayout>
       );
     }
 
     const { children } = this.props;
     return children;
   }
-};
+}

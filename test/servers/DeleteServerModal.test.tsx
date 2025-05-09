@@ -1,34 +1,26 @@
-import { screen, waitFor } from '@testing-library/react';
-import { Mock } from 'ts-mockery';
-import { useNavigate } from 'react-router-dom';
+import { screen } from '@testing-library/react';
+import { fromPartial } from '@total-typescript/shoehorn';
 import { DeleteServerModal } from '../../src/servers/DeleteServerModal';
-import { ServerWithId } from '../../src/servers/data';
+import { checkAccessibility } from '../__helpers__/accessibility';
 import { renderWithEvents } from '../__helpers__/setUpTest';
 import { TestModalWrapper } from '../__helpers__/TestModalWrapper';
 
-jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useNavigate: jest.fn() }));
-
 describe('<DeleteServerModal />', () => {
-  const deleteServerMock = jest.fn();
-  const navigate = jest.fn();
+  const deleteServerMock = vi.fn();
   const serverName = 'the_server_name';
-  const setUp = () => {
-    (useNavigate as any).mockReturnValue(navigate);
+  const setUp = () => renderWithEvents(
+    <TestModalWrapper
+      renderModal={(args) => (
+        <DeleteServerModal
+          {...args}
+          server={fromPartial({ name: serverName })}
+          deleteServer={deleteServerMock}
+        />
+      )}
+    />,
+  );
 
-    return renderWithEvents(
-      <TestModalWrapper
-        renderModal={(args) => (
-          <DeleteServerModal
-            {...args}
-            server={Mock.of<ServerWithId>({ name: serverName })}
-            deleteServer={deleteServerMock}
-          />
-        )}
-      />,
-    );
-  };
-
-  afterEach(jest.clearAllMocks);
+  it('passes a11y checks', () => checkAccessibility(setUp()));
 
   it('renders a modal window', () => {
     setUp();
@@ -46,24 +38,21 @@ describe('<DeleteServerModal />', () => {
 
   it.each([
     [() => screen.getByRole('button', { name: 'Cancel' })],
-    [() => screen.getByLabelText('Close')],
-  ])('toggles when clicking cancel button', async (getButton) => {
+    [() => screen.getByLabelText('Close dialog')],
+  ])('closes dialog when clicking cancel button', async (getButton) => {
     const { user } = setUp();
 
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     await user.click(getButton());
-
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(deleteServerMock).not.toHaveBeenCalled();
-    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('deletes server when clicking accept button', async () => {
     const { user } = setUp();
 
     expect(deleteServerMock).not.toHaveBeenCalled();
-    expect(navigate).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
-
-    await waitFor(() => expect(deleteServerMock).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+    expect(deleteServerMock).toHaveBeenCalledOnce();
   });
 });

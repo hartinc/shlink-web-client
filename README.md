@@ -1,12 +1,13 @@
 # shlink-web-client
 
-[![Build Status](https://img.shields.io/github/workflow/status/shlinkio/shlink-web-client/Continuous%20integration/develop?logo=github&style=flat-square)](https://github.com/shlinkio/shlink-web-client/actions?query=workflow%3A%22Continuous+integration%22)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/shlinkio/shlink-web-client/ci.yml?branch=develop&logo=github&style=flat-square)](https://github.com/shlinkio/shlink-web-client/actions/workflows/ci.yml?query=workflow%3A%22Continuous+integration%22)
 [![Code Coverage](https://img.shields.io/codecov/c/gh/shlinkio/shlink-web-client/develop?style=flat-square)](https://app.codecov.io/gh/shlinkio/shlink-web-client)
 [![GitHub release](https://img.shields.io/github/release/shlinkio/shlink-web-client.svg?style=flat-square)](https://github.com/shlinkio/shlink-web-client/releases/latest)
 [![Docker pulls](https://img.shields.io/docker/pulls/shlinkio/shlink-web-client.svg?logo=docker&style=flat-square)](https://hub.docker.com/r/shlinkio/shlink-web-client/)
 [![GitHub license](https://img.shields.io/github/license/shlinkio/shlink-web-client.svg?style=flat-square)](https://github.com/shlinkio/shlink-web-client/blob/main/LICENSE)
-[![Twitter](https://img.shields.io/twitter/follow/shlinkio?color=blue&label=follow&logo=twitter&style=flat-square)](https://twitter.com/shlinkio)
+
 [![Mastodon](https://img.shields.io/mastodon/follow/109329425426175098?color=%236364ff&domain=https%3A%2F%2Ffosstodon.org&label=follow&logo=mastodon&logoColor=white&style=flat-square)](https://fosstodon.org/@shlinkio)
+[![Bluesky](https://img.shields.io/badge/follow-shlinkio-0285FF.svg?style=flat-square&logo=bluesky&logoColor=white)](https://bsky.app/profile/shlink.io)
 [![Paypal Donate](https://img.shields.io/badge/Donate-paypal-blue.svg?style=flat-square&logo=paypal&colorA=cccccc)](https://slnk.to/donate)
 
 A ReactJS-based progressive web application for [Shlink](https://shlink.io).
@@ -29,7 +30,7 @@ The application runs 100% in the browser, so you can safely access any shlink in
 
 If you want to deploy shlink-web-client in a container-based cluster (kubernetes, docker swarm, etc), just pick the [shlinkio/shlink-web-client](https://hub.docker.com/r/shlinkio/shlink-web-client/) image and do it.
 
-It's a lightweight [nginx:alpine](https://hub.docker.com/r/library/nginx/) image serving the static app on port 80.
+It's a lightweight [nginx:alpine](https://hub.docker.com/r/library/nginx/) image serving the static app on port 8080.
 
 ### Self-hosted
 
@@ -54,7 +55,7 @@ Those servers can be exported and imported in other browsers, but if for some re
 [
   {
     "name": "Main server",
-    "url": "https://doma.in",
+    "url": "https://s.test",
     "apiKey": "09c972b7-506b-49f1-a19a-d729e22e599c"
   },
   {
@@ -69,11 +70,11 @@ Those servers can be exported and imported in other browsers, but if for some re
 
 If you are using the shlink-web-client docker image, you can mount the `servers.json` file in a volume inside `/usr/share/nginx/html`, which is the app's document root inside the container.
 
-    docker run --name shlink-web-client -p 8000:80 -v ${PWD}/servers.json:/usr/share/nginx/html/servers.json shlinkio/shlink-web-client
+    docker run --name shlink-web-client -p 8000:8080 -v ${PWD}/servers.json:/usr/share/nginx/html/servers.json shlinkio/shlink-web-client
     
 Alternatively, you can mount a `conf.d` directory, which in turn contains the `servers.json` file, in a volume inside `/usr/share/nginx/html`. *(since shlink-web-client 3.2.0)*.
 
-    docker run --name shlink-web-client -p 8000:80 -v ${PWD}/my-config/:/usr/share/nginx/html/conf.d/ shlinkio/shlink-web-client
+    docker run --name shlink-web-client -p 8000:8080 -v ${PWD}/my-config/:/usr/share/nginx/html/conf.d/ shlinkio/shlink-web-client
     
 If you want to pre-configure a single server, you can provide its config via env vars. When the container starts up, it will build the `servers.json` file dynamically based on them. *(since shlink-web-client 3.2.0)*.
 
@@ -84,8 +85,8 @@ If you want to pre-configure a single server, you can provide its config via env
     ```shell
     docker run \
         --name shlink-web-client \
-        -p 8000:80 \
-        -e SHLINK_SERVER_URL=https://doma.in \
+        -p 8000:8080 \
+        -e SHLINK_SERVER_URL=https://s.test \
         -e SHLINK_SERVER_API_KEY=6aeb82c6-e275-4538-a747-31f9abfba63c \
         shlinkio/shlink-web-client
     ```
